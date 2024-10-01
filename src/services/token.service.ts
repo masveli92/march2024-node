@@ -1,6 +1,7 @@
 import jsonwebtoken from "jsonwebtoken";
 
 import { configs } from "../config/configs";
+import { TokenTypeEnum } from "../enums/token-type.enum";
 import { ApiError } from "../errors/api-error";
 import { ITokenPair, ITokenPayload } from "../interfaces/token.interface";
 
@@ -16,13 +17,20 @@ class TokenService {
     );
     return { accessToken, refreshToken };
   }
-  public verifyToken(token: string): ITokenPayload {
+
+  public verifyToken(token: string, type: TokenTypeEnum): ITokenPayload {
+    let secret: string;
     try {
-      return jsonwebtoken.verify(
-        token,
-        configs.JWT_ACCESS_SECRET,
-      ) as ITokenPayload;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      switch (type) {
+        case TokenTypeEnum.ACCESS:
+          secret = configs.JWT_ACCESS_SECRET;
+          break;
+        case TokenTypeEnum.REFRESH:
+          secret = configs.JWT_REFRESH_SECRET;
+          break;
+      }
+
+      return jsonwebtoken.verify(token, secret) as ITokenPayload;
     } catch (e) {
       console.error(e.message);
       throw new ApiError("Invalid token", 401);
